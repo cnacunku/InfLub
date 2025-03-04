@@ -19,6 +19,8 @@ double Relative(double Abs, double True) {
 
 int main() {
     setlocale(LC_CTYPE, "RUS");
+    
+    cout << "Часть а)\n";
 
     double ftf, fts, Koren, FirstTrue, FirstAlm, SecondTrue, SecondAlm;
 
@@ -66,6 +68,8 @@ int main() {
     else {
         cout << "Более точное выражение: " << SecondAlm << " (Истинное значение: " << SecondTrue << ")\n";
     }
+
+    cout << "\n\nЧасть б)\n";
 
     return 0;
 }
