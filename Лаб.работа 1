@@ -1,0 +1,68 @@
+#define _USE_MATH_DEFIHES
+#include <iostream>
+#include <cmath> // Для функции sqrt
+#include <locale>
+#include <string>
+
+using namespace std;
+
+// Функция для вычисления абсолютной погрешности
+double Absolute(double True, double Alm) {
+    return abs(True - Alm);
+}
+
+// Функция для вычисления относительной погрешности
+double Relative(double True, double Alm) {
+    return (Alm / True); // В процентах
+}
+
+int main() {
+    setlocale(LC_CTYPE, "RUS");
+
+    double ftf, fts, Koren, FirstTrue, FirstAlm, SecondTrue, SecondAlm;
+
+    cout << "Введите числитель первого выражения: ";
+    cin >> ftf;
+    cout << "Введите знаменатель первого выражения: ";
+    cin >> fts;
+    
+    FirstTrue = ftf / fts;
+
+    cout << "Введите приближенное значение для первого выражения: ";
+    cin >> FirstAlm;
+
+
+    cout << "Введите число под корнем второго выражения: ";
+    cin >> Koren;
+
+    SecondTrue = sqrt(Koren);
+
+    cout << "Введите приближенное значение для второго выражения: ";
+    cin >> SecondAlm;
+
+    // Вычисление абсолютных погрешностей
+    double FirstAbs = Absolute(FirstTrue, FirstAlm);
+    double SecondAbs = Absolute(SecondTrue, SecondAlm);
+
+    // Вычисление относительных погрешностей
+    double FirstRel = Relative(FirstTrue, FirstAlm);
+    double SecondRel = Relative(SecondTrue, SecondAlm);
+
+    cout << "\nДля выражения 1: " << FirstAlm << " (Истинное значение: " << FirstTrue << ")\n";
+    cout << "Абсолютная погрешность: " << FirstAbs << "\n";
+    cout << "Относительная погрешность: " << FirstRel << "%\n\n";
+
+    cout << "Для выражения 2: " << SecondAlm << " (Истинное значение: " << SecondTrue << ")\n";
+    cout << "Абсолютная погрешность: " << SecondAbs << "\n";
+    cout << "Относительная погрешность: " << SecondRel << "%\n\n";
+
+    // Определение более точного выражения
+    if (FirstRel < SecondRel) {
+        cout << "Более точное выражение: " << FirstAlm << " (Истинное значение: " << FirstTrue << ")\n";
+    }
+    else {
+        cout << "Более точное выражение: " << SecondAlm << " (Истинное значение: " << SecondTrue << ")\n";
+    }
+
+    return 0;
+}
