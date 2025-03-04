@@ -3,6 +3,7 @@
 #include <cmath> // Для функции sqrt
 #include <locale>
 #include <string>
+#include <iomanip> // Для setprecision
 
 using namespace std;
 
@@ -12,8 +13,8 @@ double Absolute(double True, double Alm) {
 }
 
 // Функция для вычисления относительной погрешности
-double Relative(double True, double Alm) {
-    return (Alm / True); // В процентах
+double Relative(double Abs, double True) {
+    return (Abs / True); // В процентах
 }
 
 int main() {
@@ -25,7 +26,7 @@ int main() {
     cin >> ftf;
     cout << "Введите знаменатель первого выражения: ";
     cin >> fts;
-    
+
     FirstTrue = ftf / fts;
 
     cout << "Введите приближенное значение для первого выражения: ";
@@ -42,11 +43,13 @@ int main() {
 
     // Вычисление абсолютных погрешностей
     double FirstAbs = Absolute(FirstTrue, FirstAlm);
-    double SecondAbs = Absolute(SecondTrue, SecondAlm);
+    double SecondAbs = Absolute(SecondTrue, SecondAlm); 
 
     // Вычисление относительных погрешностей
-    double FirstRel = Relative(FirstTrue, FirstAlm);
-    double SecondRel = Relative(SecondTrue, SecondAlm);
+    double FirstRel = Relative(FirstAbs, FirstTrue);
+    double SecondRel = Relative(SecondAbs, SecondTrue);
+
+    cout << fixed << setprecision(6); // Установка точности вывода
 
     cout << "\nДля выражения 1: " << FirstAlm << " (Истинное значение: " << FirstTrue << ")\n";
     cout << "Абсолютная погрешность: " << FirstAbs << "\n";
