@@ -14,7 +14,7 @@ double Absolute(double True, double Alm) {
 
 // Функция для вычисления относительной погрешности
 double Relative(double Abs, double True) {
-    return (Abs / True); // В процентах
+    return (Abs / True) * 100; // В процентах
 }
 
 int decp(double ER) {
@@ -29,6 +29,18 @@ int decp(double ER) {
 
     return count; // Возвращаем количество нунжых цифр после запятой
 }
+
+int decz(double TrueNumber) {
+    int count = 0;
+
+    while ((int)TrueNumber != TrueNumber) {
+        TrueNumber *= 10;
+        count++;
+    }
+    return count;
+}
+
+
 
 double reduction(double number, int N) {
     double factor = pow(10, N); // Вычисляем 10 в степени N
@@ -86,11 +98,11 @@ int main() {
     else {
         cout << "Более точное выражение: " << SecondAlm << " (Истинное значение: " << SecondTrue << ")\n";
     }
-    
+
 
 
     cout << "\n\nЧасть б)\n";
-    
+
     double ini, ER;
 
     cout << "Введите искомое число: ";
@@ -103,8 +115,25 @@ int main() {
     double TrueSigns = reduction(ini, dec_count);
 
     cout << "\nЧисло только с верными знаками: " << TrueSigns << "\n";
+   
 
 
+    cout << "\n\nЧасть в)\n";
+
+    double TrueNum, AbsPog, OtnPog;
+
+    cout << "Введите число, все цифры которого верны по умолчанию: ";
+    cin >> TrueNum;
+
+    int kol = decz(TrueNum);
+    
+    AbsPog = 1/(pow(10,kol));
+
+    OtnPog = Relative(AbsPog, TrueNum);
+
+    cout << "\nПредельная абсолютная погрешность: " << AbsPog<< "\n";
+
+    cout << "\nПредельная относительная погрешность: " << OtnPog << "%\n\n";
 
     return 0;
 }
