@@ -127,7 +127,7 @@ int main() {
 
     int kol = decz(TrueNum);
     
-    AbsPog = 1/(pow(10,kol));
+    AbsPog = 0.5/(pow(10,kol));
 
     OtnPog = Relative(AbsPog, TrueNum);
 
@@ -137,3 +137,4 @@ int main() {
 
     return 0;
 }
+//AbsPog = 1 / (pow(10, kol));
