@@ -17,6 +17,24 @@ double Relative(double Abs, double True) {
     return (Abs / True); // В процентах
 }
 
+int decp(double ER) {
+    double des = 0.1; // Начальное значение прогрессии
+    int count = 0;
+
+    // Пока значение порога больше чем ER, продолжаем делить на 10
+    while (des > ER) {
+        count++;
+        des /= 10; // Переход к следующему разряду
+    }
+
+    return count; // Возвращаем количество нунжых цифр после запятой
+}
+
+double reduction(double number, int N) {
+    double factor = pow(10, N); // Вычисляем 10 в степени N
+    return round(number * factor) / factor; // Округляем и делим обратно
+}
+
 int main() {
     setlocale(LC_CTYPE, "RUS");
     
@@ -45,7 +63,7 @@ int main() {
 
     // Вычисление абсолютных погрешностей
     double FirstAbs = Absolute(FirstTrue, FirstAlm);
-    double SecondAbs = Absolute(SecondTrue, SecondAlm); 
+    double SecondAbs = Absolute(SecondTrue, SecondAlm);
 
     // Вычисление относительных погрешностей
     double FirstRel = Relative(FirstAbs, FirstTrue);
@@ -68,8 +86,25 @@ int main() {
     else {
         cout << "Более точное выражение: " << SecondAlm << " (Истинное значение: " << SecondTrue << ")\n";
     }
+    
+
 
     cout << "\n\nЧасть б)\n";
+    
+    double ini, ER;
+
+    cout << "Введите искомое число: ";
+    cin >> ini;
+    cout << "Введите погрешность: ";
+    cin >> ER;
+
+    int dec_count = decp(ER);
+
+    double TrueSigns = reduction(ini, dec_count);
+
+    cout << "\nЧисло только с верными знаками: " << TrueSigns << "\n";
+
+
 
     return 0;
 }
