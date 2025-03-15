@@ -1,9 +1,9 @@
 #define _USE_MATH_DEFIHES
 #include <iostream>
-#include <cmath> // Для функции sqrt
+#include <cmath>
 #include <locale>
 #include <string>
-#include <iomanip> // Для setprecision
+#include <iomanip> 
 
 using namespace std;
 
@@ -17,19 +17,20 @@ double Relative(double Abs, double True) {
     return (Abs / True) * 100; // В процентах
 }
 
+// Функция для определения количества знаков после запятой
 int decp(double ER) {
-    double des = 0.1; // Начальное значение прогрессии
+    double des = 0.1;
     int count = 0;
 
-    // Пока значение порога больше чем ER, продолжаем делить на 10
     while (des > ER) {
         count++;
-        des /= 10; // Переход к следующему разряду
+        des /= 10;
     }
 
-    return count; // Возвращаем количество нунжых цифр после запятой
+    return count;
 }
 
+// Функция для определения количества значащих цифр в числе
 int decz(double TrueNumber) {
     int count = 0;
 
@@ -40,16 +41,15 @@ int decz(double TrueNumber) {
     return count;
 }
 
-
-
+// Функция для округления числа до заданного количества знаков после запятой
 double reduction(double number, int N) {
-    double factor = pow(10, N); // Вычисляем 10 в степени N
-    return round(number * factor) / factor; // Округляем и делим обратно
+    double factor = pow(10, N);
+    return round(number * factor) / factor; 
 }
 
 int main() {
     setlocale(LC_CTYPE, "RUS");
-    
+
     cout << "Часть а)\n";
 
     double ftf, fts, Koren, FirstTrue, FirstAlm, SecondTrue, SecondAlm;
@@ -83,22 +83,22 @@ int main() {
 
     cout << fixed << setprecision(6); // Установка точности вывода
 
-    cout << "\nДля выражения 1: " << FirstAlm << " (Истинное значение: " << FirstTrue << ")\n";
+    cout << "\nДля выражения 1: \n";
+    cout << "Истинное значение: " << FirstTrue << "\n";
     cout << "Абсолютная погрешность: " << FirstAbs << "\n";
     cout << "Относительная погрешность: " << FirstRel << "%\n\n";
 
-    cout << "Для выражения 2: " << SecondAlm << " (Истинное значение: " << SecondTrue << ")\n";
+    cout << "Для выражения 2: \n";
+    cout << "Истинное значение: " << SecondTrue << "\n";
     cout << "Абсолютная погрешность: " << SecondAbs << "\n";
     cout << "Относительная погрешность: " << SecondRel << "%\n\n";
 
-    // Определение более точного выражения
     if (FirstRel < SecondRel) {
-        cout << "Более точное выражение: " << FirstAlm << " (Истинное значение: " << FirstTrue << ")\n";
+        cout << "Более точное выражение - первое: " << FirstAlm;
     }
     else {
-        cout << "Более точное выражение: " << SecondAlm << " (Истинное значение: " << SecondTrue << ")\n";
+        cout << "Более точное выражение - второе: " << SecondAlm;
     }
-
 
 
     cout << "\n\nЧасть б)\n";
@@ -111,11 +111,9 @@ int main() {
     cin >> ER;
 
     int dec_count = decp(ER);
-
     double TrueSigns = reduction(ini, dec_count);
 
     cout << "\nЧисло только с верными знаками: " << TrueSigns << "\n";
-   
 
 
     cout << "\n\nЧасть в)\n";
@@ -126,15 +124,13 @@ int main() {
     cin >> TrueNum;
 
     int kol = decz(TrueNum);
-    
-    AbsPog = 0.5/(pow(10,kol));
+
+    AbsPog = 0.5 / (pow(10, kol));
 
     OtnPog = Relative(AbsPog, TrueNum);
 
-    cout << "\nПредельная абсолютная погрешность: " << AbsPog<< "\n";
-
-    cout << "\nПредельная относительная погрешность: " << OtnPog << "%\n\n";
+    cout << "\nПредельная абсолютная погрешность: " << AbsPog;
+    cout << "\nПредельная относительная погрешность: " << OtnPog << "%\n";
 
     return 0;
 }
-//AbsPog = 1 / (pow(10, kol));
