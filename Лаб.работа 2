@@ -23,15 +23,15 @@ double exponent(const double x, const double e) {
 int main() {
     setlocale(0, "ru");
 
-    cout << "Задача 1" << endl;
+    cout << "Задание №1" << endl;
     double xn, xk, dx;
     double e1 = 0.1, e2 = 0.000001;
 
-    cout << "Введите начальное значение xn:";
+    cout << "Начальное значение xn:";
     cin >> xn;
-    cout << "Введите конечное значение xk: ";
+    cout << "Конечное значение xk: ";
     cin >> xk;
-    cout << "Введите шаг dx: ";
+    cout << "Шаг dx: ";
     cin >> dx;
 
     cout << "+----------+------------+------------+-------------+-------------+------------+" << endl;
@@ -40,20 +40,20 @@ int main() {
 
     cout << fixed << setprecision(6);
     for (double x = xn; x <= xk; x += dx) {
-         double result1 = exponent(x, e1);
-         double result2 = exponent(x, e2);
+        double result1 = exponent(x, e1);
+        double result2 = exponent(x, e2);
 
-         cout << "| " << setw(8) << x << " "
-              << "| " << setw(10) << exp(x) << " "
-              << "| " << setw(10) << e1 << " "
-              << "| " << setw(10) << result1 << "  "
-              << "| " << setw(10) << e2 << "  "
-              << "| " << setw(10) << result2 << " |" << endl;
+        cout << "| " << setw(8) << x << " "
+             << "| " << setw(10) << exp(x) << " "
+             << "| " << setw(10) << e1 << " "
+             << "| " << setw(10) << result1 << "  "
+             << "| " << setw(10) << e2 << "  "
+             << "| " << setw(10) << result2 << " |" << endl;
     }
     cout << "+----------+------------+------------+-------------+-------------+------------+" << endl;
 
 
-    cout << endl << "Задача 2" << endl;
+    cout << endl << "Задание №2" << endl;
 
     double a;
     cout << "Введите a: ";
@@ -68,10 +68,10 @@ int main() {
         x0 = result;
     }
 
-    cout << "Точное значение a^(1/3): " << x0 << endl;
+    cout << "Значение a^(1/3): " << x0 << endl;
 
 
-    cout << endl << "Задача 3" << endl;
+    cout << endl << "Задание №3" << endl;
     cout << "Введите n: ";
     int n;
     cin >> n;
@@ -87,7 +87,7 @@ int main() {
     cout << "Минимальное значение: " << m << endl;
 
 
-    cout << endl << "Задача 4" << endl;
+    cout << endl << "Задание №4" << endl;
     int n4;
     cout << "Введите n: ";
     cin >> n4;
@@ -103,34 +103,38 @@ int main() {
         b4 = new_b;
     }
 
-    cout << "Результат: " << result << endl;
+    cout << "Результат выражения: " << result << endl;
 
 
-    cout << endl << "Задача 5" << endl;
+    cout << endl << "Задание №5" << endl;
     double e = exp(1);
     double eps1;
 
     cout << "Введите погрешность: ";
     cin >> eps1;
 
-    cout << "Первый предел:" << endl;
+    cout << "+--------+-----------------+------------------------+" << endl;
+    cout << "| Предел |    Результат    |   n(кол-во итераций)   |" << endl;
+    cout << "+--------+-----------------+------------------------+" << endl;
+
     for (int n = 0;; ++n) {
         double x = pow(2, -n);
         double lim = sin(x) / x;
 
         if (fabs(lim - 1) <= eps1) {
-            cout << "Левая часть выражения первый раз отличается от 1 менее, чем на " << eps1 << " при n = " << n << "; Значение lim = " << lim << endl;
+            cout << "| Первый | lim = " << setw(9) << lim << " | n (x=2^-n) = " << setw(6) << n << "    | " << endl;
             break;
         }
     }
 
-    cout << "\nВторой предел:" << endl;
     for (int n = 1;; ++n) {
-        double lim = pow(1 + 1.f / n, n);
+        double lim = pow(1 + 1.0 / n, n);
         if (fabs(lim - e) <= eps1) {
-            cout << "Левая часть выражения первый раз отличается от " << e << " менее, чем на " << eps1 << " при n = " << n << "; Значение lim = " << lim << endl;
+            cout << "| Второй | lim = " << setw(9) << lim << " | n (в формуле) = " << setw(6) << n << " | " << endl;
             break;
         }
     }
+    cout << "+--------+-----------------+------------------------+" << endl;
+    
     return 0;
 }
