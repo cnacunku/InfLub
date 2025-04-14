@@ -1,0 +1,147 @@
+#include <iostream>
+#include <cmath>
+#include <iomanip>
+#include <locale>
+
+using namespace std;
+
+// Исходная функция
+double f(double x) {
+    return 2 * pow(log(x), 2) + 2 * pow(x, 2) - 3;
+}
+
+// Первая производная функции
+double f1(double x) {
+    return (4 * log(x)) / x + 4 * x;
+}
+
+// Вторая производная функции
+double f2(double x) {
+    return (2 - 2 * log(x)) / (x * x) + 4;
+}
+
+// Метод дихотомии
+void bisection(double a, double b, double eps) {
+    if (f(a) * f(b) >= 0) {
+        cout << "На отрезке [" << a << ", " << b << "] метод дихотомии не выявил корней\n";
+        return;
+    }
+
+    double c;
+    int iter = 0;
+
+    while (fabs(b - a) > eps) {
+        c = (a + b) / 2;
+        iter++;
+
+        if (f(c) == 0.0) {
+            break;
+        }
+        else if (f(c) * f(a) < 0) {
+            b = c;
+        }
+        else {
+            a = c;
+        }
+    }
+
+    double root = (a + b) / 2;
+    cout << "Метод дихотомии:\n";
+    cout << "Корень: " << setprecision(8) << root << endl;
+    cout << "Функция в найденном значении x: " << f(root) << endl;
+    cout << "Итераций: " << iter << endl << endl;
+}
+
+// Метод хорд
+void chord(double a, double b, double eps) {
+    if (f(a) * f(b) >= 0) {
+        cout << "На отрезке [" << a << ", " << b << "] метод хорд не выявил корней\n";
+        return;
+    }
+
+    double x, z, h;
+    int iter = 0;
+
+    // Выбираем неподвижную точку
+    if (f(a) * f2(a) > 0) {
+        x = b;
+        z = a;
+    }
+    else {
+        x = a;
+        z = b;
+    }
+
+    do {
+        h = (x - z) / (f(x) - f(z)) * f(x);
+        x = x - h;
+        iter++;
+    } while (fabs(h) > eps);
+
+    cout << "Метод хорд:\n";
+    cout << "Корень: " << setprecision(8) << x << endl;
+    cout << "Функция в найденном значении x: " << f(x) << endl;
+    cout << "Итераций: " << iter << endl << endl;
+}
+
+// Метод Ньютона (касательных)
+void newtonMethod(double a, double b, double eps) {
+    // Проверка условий сходимости
+    if (f(a) * f(b) >= 0) {
+        cout << "На отрезке [" << a << ", " << b << "] метод Ньютона не выявил корней\n";
+        return;
+    }
+
+    double x, h;
+    int iter = 0;
+
+    // Выбор начального приближения
+    if (f(b) * f2(b) > 0) {
+        x = b;
+    }
+    else {
+        x = a;
+    }
+
+    do {
+        double fx = f(x);
+        double dfx = f1(x);
+
+        if (fabs(dfx) < 1e-10) {
+            cout << "Производная близка к нулю. Метод расходится.\n";
+            return;
+        }
+
+        h = fx / dfx;
+        x = x - h;
+        iter++;
+
+    } while (fabs(h) > eps && iter < 1000);
+
+    cout << "Метод Ньютона:\n";
+    cout << "Корень: " << setprecision(8) << x << endl;
+    cout << "Функция в найденном значении x: " << f(x) << endl;
+    cout << "Итераций: " << iter << endl << endl;
+}
+
+int main() {
+    setlocale(0, "ru");
+    const double eps = 0.0001;
+
+    cout << "Поиск корней уравнения 2ln^2(x) + 2x^2 - 3 = 0\n";
+    cout << "Точность: " << eps << endl << endl;
+
+    // Первый корень на [0.1, 1.0]
+    cout << "----- Корень на [0.1, 1.0] -----\n";
+    bisection(0.1, 1.0, eps);
+    chord(0.1, 1.0, eps);
+    newtonMethod(0.1, 1.0, eps);
+
+    // Второй корень на [1.0, 1.5]
+    cout << "----- Корень на [1.0, 1.5] -----\n";
+    bisection(1.0, 1.5, eps);
+    chord(1.0, 1.5, eps);
+    newtonMethod(1.0, 1.5, eps);
+
+    return 0;
+}
