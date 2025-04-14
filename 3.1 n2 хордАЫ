@@ -1,0 +1,72 @@
+#include <iostream>
+#include <cmath>
+#include <iomanip>
+#include <locale>
+
+using namespace std;
+
+// Функция, корень которой мы ищем
+double F(double x) {
+    return x * x - 4; // Пример: x^2 - 4 = 0 (корень x = 2)
+}
+
+// Вторая производная функции F(x)
+double F2(double x) {
+    return 2; // Для f(x) = x^2 - 4 вторая производная равна 2
+}
+
+void chordMethod(double a, double b, double eps) {
+    // Проверяем условие F(a)*F(b) < 0
+    if (F(a) * F(b) >= 0) {
+        cout << "На данном отрезке либо нет корня, либо несколько корней. Метод не применим." << endl;
+        return;
+    }
+
+    double f1 = F(a);
+    double f2 = F2(a);
+    int n = 1;
+    double x, z, h;
+
+    // Определяем начальные x и z
+    if (f1 * f2 > 0) {
+        x = b;
+        z = a;
+    }
+    else {
+        x = a;
+        z = b;
+    }
+
+    do {
+        double fz = F(z);
+        f1 = F(x);
+
+        // Вычисляем точку пересечения хорды с осью абсцисс
+        h = (x - z) / (f1 - fz) * f1;
+        x = x - h;
+        n++;
+
+    } while (fabs(h) > eps);
+
+    f1 = F(x);
+
+    cout << "Найденный корень: x = " << setprecision(10) << x << endl;
+    cout << "Значение функции в корне: F(x) = " << f1 << endl;
+    cout << "Количество итераций: n = " << n << endl;
+}
+
+int main() {
+    setlocale(0, "ru");
+    double a, b, eps;
+
+    cout << "Введите левую границу отрезка (a): ";
+    cin >> a;
+    cout << "Введите правую границу отрезка (b): ";
+    cin >> b;
+    cout << "Введите точность (eps): ";
+    cin >> eps;
+
+    chordMethod(a, b, eps);
+
+    return 0;
+}
