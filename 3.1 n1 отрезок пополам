@@ -1,0 +1,61 @@
+#include <iostream>
+#include <cmath>
+#include <iomanip>
+#include <locale>
+
+using namespace std;
+
+// Функция, корень которой мы ищем
+double f(double x) {
+    return x * x - 4; // Пример: ищем корень уравнения x^2 - 4 = 0 (ответ: x = 2)
+}
+
+void bisectionMethod(double a, double b, double eps) {
+    // Проверяем условие f(a)*f(b) < 0
+    if (f(a) * f(b) >= 0) {
+        cout << "На данном отрезке либо нет корня, либо несколько корней. Метод не применим." << endl;
+        return;
+    }
+
+    double f1 = f(a);
+    int n = 1;
+    double t, f2;
+
+    do {
+        t = (a + b) / 2; // Середина отрезка
+        f2 = f(t);
+
+        if (f1 * f2 < 0) {
+            b = t;
+        }
+        else {
+            a = t;
+            f1 = f2;
+        }
+
+        n++;
+    } while (fabs(b - a) > eps);
+
+    double x = (a + b) / 2;
+    double fx = f(x);
+
+    cout << "Найденный корень: x = " << setprecision(10) << x << endl;
+    cout << "Значение функции в корне: f(x) = " << fx << endl;
+    cout << "Количество итераций: n = " << n << endl;
+}
+
+int main() {
+    setlocale(0, "ru");
+    double a, b, eps;
+
+    cout << "Введите левую границу отрезка (a): ";
+    cin >> a;
+    cout << "Введите правую границу отрезка (b): ";
+    cin >> b;
+    cout << "Введите точность (eps): ";
+    cin >> eps;
+
+    bisectionMethod(a, b, eps);
+
+    return 0;
+}
