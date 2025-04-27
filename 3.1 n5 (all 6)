@@ -205,14 +205,14 @@ void combinedMethod(double a, double b, double eps) {
     do {
         // Метод хорд (для an)
         an = an - f(an) * (bn - an) / (f(bn) - f(an));
-        
+
         // Метод Ньютона (для bn)
         if (fabs(f1(bn)) < 1e-10) {
             cout << "Производная близка к нулю. Метод расходится.\n";
             return;
         }
         bn = bn - f(bn) / f1(bn);
-        
+
         iter++;
     } while (fabs(bn - an) > eps && iter < 1000);
 
@@ -230,14 +230,14 @@ int main() {
     cout << "Поиск корней уравнения 2ln^2(x) + 2x^2 - 3 = 0\n";
     cout << "Точность: " << eps << endl << endl;
 
-    // Первый корень на [0.1, 1.0]
-    cout << "----- Корень на [0.1, 1.0] -----\n";
-    bisection(0.1, 1.0, eps);
-    chord(0.1, 1.0, eps);
-    newtonMethod(0.1, 1.0, eps);
-    prostiter(0.1, 1.0, eps);
-    secantMethod(0.1, 1.0, eps);
-    combinedMethod(0.1, 1.0, eps);
+    // Первый корень на [0.1, 0.5]
+    cout << "----- Корень на [0.1, 0.5] -----\n";
+    bisection(0.1, 0.5, eps);
+    chord(0.1, 0.5, eps);
+    newtonMethod(0.1, 0.5, eps);
+    prostiter(0.1, 0.5, eps);
+    secantMethod(0.1, 0.5, eps);
+    combinedMethod(0.1, 0.5, eps);
 
     // Второй корень на [1.0, 1.5]
     cout << "----- Корень на [1.0, 1.5] -----\n";
