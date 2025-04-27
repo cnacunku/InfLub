@@ -1,0 +1,354 @@
+#include <iostream>
+#include <cmath>
+#include <iomanip>
+#include <locale>
+
+using namespace std;
+
+// Исходная функция
+double f(double x) {
+    return 2 * pow(log(x), 2) + 2 * pow(x, 2) - 3;
+}
+
+// Первая производная функции
+double f1(double x) {
+    return (4 * log(x)) / x + 4 * x;
+}
+
+// Вторая производная функции
+double f2(double x) {
+    return (2 - 2 * log(x)) / (x * x) + 4;
+}
+
+// Функция g(x) для метода простых итераций
+double g(double x) {
+    return x - f(x) / f1(x);
+}
+
+// Метод дихотомии
+void bisection(double a, double b, double eps) {
+    if (f(a) * f(b) >= 0) {
+        cout << "На отрезке [" << a << ", " << b << "] метод дихотомии не выявил корней\n";
+        return;
+    }
+
+    double c;
+    int iter = 0;
+
+    cout << "Метод дихотомии:\n";
+    cout << "+-----+------------+----------------+\n";
+    cout << "|  №  |     x      |      F(x)      |\n";
+    cout << "+-----+------------+----------------+\n";
+
+    while (fabs(b - a) > eps) {
+        c = (a + b) / 2;
+        iter++;
+
+        cout << "| " << setw(3) << iter << " | " << setw(10) << c << " | " << setw(14) << f(c) << " |\n";
+
+        if (f(c) == 0.0) {
+            break;
+        }
+        else if (f(c) * f(a) < 0) {
+            b = c;
+        }
+        else {
+            a = c;
+        }
+    }
+
+    cout << "+-----+------------+----------------+\n";
+    double root = (a + b) / 2;
+    cout << "\nКорень: " << setprecision(8) << root << endl;
+    cout << "Функция в найденном значении x: " << f(root) << endl;
+    cout << "Итераций: " << iter << endl << endl;
+}
+
+// Метод хорд
+void chord(double a, double b, double eps) {
+    if (f(a) * f(b) >= 0) {
+        cout << "На отрезке [" << a << ", " << b << "] метод хорд не выявил корней\n";
+        return;
+    }
+
+    double x, z, h;
+    int iter = 0;
+
+    // Выбираем неподвижную точку
+    if (f(a) * f2(a) > 0) {
+        x = b;
+        z = a;
+    }
+    else {
+        x = a;
+        z = b;
+    }
+
+    cout << "Метод хорд:\n";
+    cout << "+-----+------------+----------------+\n";
+    cout << "|  №  |     x      |      F(x)      |\n";
+    cout << "+-----+------------+----------------+\n";
+
+    do {
+        h = (x - z) / (f(x) - f(z)) * f(x);
+        x = x - h;
+        iter++;
+
+        cout << "| " << setw(3) << iter << " | " << setw(10) << x << " | " << setw(14) << f(x) << " |\n";
+
+    } while (fabs(h) > eps);
+
+    cout << "+-----+------------+----------------+\n";
+    cout << "\nКорень: " << setprecision(8) << x << endl;
+    cout << "Функция в найденном значении x: " << f(x) << endl;
+    cout << "Итераций: " << iter << endl << endl;
+}
+
+// Метод Ньютона (касательных)
+void newtonMethod(double a, double b, double eps) {
+    // Проверка условий сходимости
+    if (f(a) * f(b) >= 0) {
+        cout << "На отрезке [" << a << ", " << b << "] метод Ньютона не выявил корней\n";
+        return;
+    }
+
+    double x, h;
+    int iter = 0;
+
+    // Выбор начального приближения
+    if (f(b) * f2(b) > 0) {
+        x = b;
+    }
+    else {
+        x = a;
+    }
+
+    cout << "Метод Ньютона:\n";
+    cout << "+-----+------------+----------------+\n";
+    cout << "|  №  |     x      |      F(x)      |\n";
+    cout << "+-----+------------+----------------+\n";
+
+    do {
+        double fx = f(x);
+        double dfx = f1(x);
+
+        if (fabs(dfx) < 1e-10) {
+            cout << "Производная близка к нулю. Метод расходится.\n";
+            return;
+        }
+
+        h = fx / dfx;
+        x = x - h;
+        iter++;
+
+        cout << "| " << setw(3) << iter << " | " << setw(10) << x << " | " << setw(14) << f(x) << " |\n";
+
+    } while (fabs(h) > eps && iter < 1000);
+
+    cout << "+-----+------------+----------------+\n";
+    cout << "\nКорень: " << setprecision(8) << x << endl;
+    cout << "Функция в найденном значении x: " << f(x) << endl;
+    cout << "Итераций: " << iter << endl << endl;
+}
+
+// Метод простых итераций
+void prostiter(double a, double b, double eps) {
+    // Проверка условия F(a)*F(b) < 0
+    if (f(a) * f(b) >= 0) {
+        cout << "На отрезке [" << a << ", " << b << "] метод простых итераций не выявил корней" << endl;
+        return;
+    }
+
+    double x0 = a;
+    double x;
+    int iter = 0;
+
+    cout << "Метод простых итераций:\n";
+    cout << "+-----+------------+---------------+\n";
+    cout << "|  №  |     x      |      F(x)     |\n";
+    cout << "+-----+------------+---------------+\n";
+
+    do {
+        x = g(x0);
+        iter++;
+
+        cout << "| " << setw(3) << iter << " | " << setw(10) << x << " | " << setw(13) << f(x) << " |\n";
+
+        if (fabs(x - x0) <= eps) {
+            break;
+        }
+
+        x0 = x;
+    } while (true);
+
+    cout << "+-----+------------+---------------+\n";
+    cout << "\nКорень: " << setprecision(8) << x << endl;
+    cout << "Функция в найденном значении x: " << f(x) << endl;
+    cout << "Итераций: " << iter << endl << endl;
+}
+
+// Метод секущих
+void secantMethod(double a, double b, double eps) {
+    if (f(a) * f(b) >= 0) {
+        cout << "На отрезке [" << a << ", " << b << "] метод секущих не выявил корней\n";
+        return;
+    }
+
+    double x0 = a;
+    double x1 = b;
+    double x2;
+    int iter = 0;
+
+    cout << "Метод секущих:\n";
+    cout << "+-----+------------+----------------+\n";
+    cout << "|  №  |     x      |      F(x)      |\n";
+    cout << "+-----+------------+----------------+\n";
+
+    do {
+        if (fabs(f(x1) - f(x0)) < 1e-10) {
+            cout << "Метод секущих: разница значений функции слишком мала\n";
+            return;
+        }
+
+        x2 = x1 - f(x1) * (x1 - x0) / (f(x1) - f(x0));
+        x0 = x1;
+        x1 = x2;
+        iter++;
+
+        cout << "| " << setw(3) << iter << " | " << setw(10) << x2 << " | " << setw(14) << f(x2) << " |\n";
+
+    } while (fabs(f(x2)) > eps && iter < 1000);
+
+    cout << "+-----+------------+----------------+\n";
+    cout << "\nКорень: " << setprecision(8) << x2 << endl;
+    cout << "Функция в найденном значении x: " << f(x2) << endl;
+    cout << "Итераций: " << iter << endl << endl;
+}
+
+// Комбинированный метод хорд и касательных
+void combinedMethod(double a, double b, double eps) {
+    if (f(a) * f(b) >= 0) {
+        cout << "На отрезке [" << a << ", " << b << "] комбинированный метод не выявил корней\n";
+        return;
+    }
+
+    double an = a;
+    double bn = b;
+    int iter = 0;
+
+    cout << "Комбинированный метод хорд и касательных:\n";
+    cout << "+-----+------------+----------------+\n";
+    cout << "|  №  |     x      |      F(x)      |\n";
+    cout << "+-----+------------+----------------+\n";
+
+    do {
+        // Метод хорд (для an)
+        an = an - f(an) * (bn - an) / (f(bn) - f(an));
+
+        // Метод Ньютона (для bn)
+        if (fabs(f1(bn)) < 1e-10) {
+            cout << "Производная близка к нулю. Метод расходится.\n";
+            return;
+        }
+        bn = bn - f(bn) / f1(bn);
+
+        iter++;
+
+        // Выводим среднее значение между an и bn
+        double x = (an + bn) / 2;
+        cout << "| " << setw(3) << iter << " | " << setw(10) << x << " | " << setw(14) << f(x) << " |\n";
+
+    } while (fabs(bn - an) > eps && iter < 1000);
+
+    cout << "+-----+------------+----------------+\n";
+    double root = (an + bn) / 2;
+    cout << "\nКорень: " << setprecision(8) << root << endl;
+    cout << "Функция в найденном значении x: " << f(root) << endl;
+    cout << "Итераций: " << iter << endl << endl;
+}
+
+// Функция для вывода всех методов
+void allMethods(double a, double b, double eps) {
+    bisection(a, b, eps);
+    chord(a, b, eps);
+    newtonMethod(a, b, eps);
+    prostiter(a, b, eps);
+    secantMethod(a, b, eps);
+    combinedMethod(a, b, eps);
+}
+
+int main() {
+    setlocale(0, "ru");
+    double a, b, eps = 0.0001;
+    int choice;
+
+    cout << "Поиск корней уравнения 2ln^2(x) + 2x^2 - 3 = 0\n";
+    cout << "Точность по умолчанию: " << eps << endl;
+
+    // Ввод интервала
+    while (true) {
+        cout << "\nВведите интервал [a, b] для поиска корня:\n";
+        cout << "a = ";
+        cin >> a;
+        cout << "b = ";
+        cin >> b;
+
+        if (a >= b) {
+            cout << "Ошибка: a должно быть меньше b. Попробуйте снова.\n";
+            continue;
+        }
+
+        if (a <= 0) {
+            cout << "Ошибка: функция не определена при x <= 0. Попробуйте снова.\n";
+            continue;
+        }
+
+        break;
+    }
+
+    // Меню выбора метода
+    while (true) {
+        cout << "\nВыберите метод решения:\n";
+        cout << "1. Метод дихотомии\n";
+        cout << "2. Метод хорд\n";
+        cout << "3. Метод Ньютона\n";
+        cout << "4. Метод простых итераций\n";
+        cout << "5. Метод секущих\n";
+        cout << "6. Комбинированный метод хорд и касательных\n";
+        cout << "7. Все методы\n";
+        cout << "0. Выход\n";
+        cout << "Ваш выбор: ";
+        cin >> choice;
+        cout << endl;
+
+        if (choice == 0) break;
+
+        switch (choice) {
+        case 1:
+            bisection(a, b, eps);
+            break;
+        case 2:
+            chord(a, b, eps);
+            break;
+        case 3:
+            newtonMethod(a, b, eps);
+            break;
+        case 4:
+            prostiter(a, b, eps);
+            break;
+        case 5:
+            secantMethod(a, b, eps);
+            break;
+        case 6:
+            combinedMethod(a, b, eps);
+            break;
+        case 7:
+            allMethods(a, b, eps);
+            break;
+        default:
+            cout << "Неверный выбор. Попробуйте снова.\n";
+        }
+    }
+
+    return 0;
+}
