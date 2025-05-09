@@ -1,0 +1,133 @@
+#define _USE_MATH_DEFINES 
+#define _CRT_SECURE_NO_WARNINGS
+
+#include <iostream>
+#include <cmath>
+#include <iomanip>
+#include <locale>
+
+using namespace std;
+
+// Исходная функция
+double F(double x) {
+    return (pow(x, 2) + 2) / (sqrt(pow(x, 2) + 1));
+}
+
+// Первообразная функция
+double P(double x) {
+    return (3 * log(sqrt(pow(x, 2) + 1) + x)) / 2 + (x * sqrt(pow(x, 2) + 1)) / 2;
+}
+
+// Метод средних прямоугольников
+double medium_rectangles_method(double a, double b, int n) {
+    double h = (b - a) / n;
+    double sum = 0.0;
+
+    for (int i = 0; i < n; ++i) {
+        double x_mid = a + (i + 0.5) * h;
+        sum += F(x_mid);
+    }
+
+    return h * sum;
+}
+
+// Метод левых прямоугольников
+double left_rectangles_method(double a, double b, int n) {
+    double h = (b - a) / n;
+    double sum = 0.0;
+
+    for (int i = 0; i < n; ++i) {
+        double x_left = a + i * h;
+        sum += F(x_left);
+    }
+
+    return h * sum;
+}
+
+// Метод правых прямоугольников
+double right_rectangles_method(double a, double b, int n) {
+    double h = (b - a) / n;
+    double sum = 0.0;
+
+    for (int i = 1; i <= n; ++i) {
+        double x_right = a + i * h;
+        sum += F(x_right);
+    }
+
+    return h * sum;
+}
+
+// Метод трапеций
+double method_trapezoid(double a, double b, int n) {
+    double h = (b - a) / n;
+    double S = 0;
+    for (int i = 1; i < n; i++) {
+        S += F(a + i * h);
+    }
+    return h * ((F(a) + F(b)) / 2 + S);
+}
+
+// Метод Симпсона
+double method_simpsons(double a, double b, int n) {
+    if (n % 2 != 0) n++; // Обяз. условие, что n - чётное число
+    double h = (b - a) / n;
+    double S1 = 0, S2 = 0;
+    for (int i = 1; i < n; i++) {
+        if (i % 2 == 0) {
+            S1 += F(a + i * h);
+        }
+        else {
+            S2 += F(a + i * h);
+        }
+    }
+    return h / 3 * (F(a) + F(b) + 2 * S1 + 4 * S2);
+}
+
+// Функция для вывода результатов конкретного метода
+void print_results(const string& method_name, double a, double b, double exact_value) {
+    int ns[] = { 4, 40, 140 };
+
+    cout << "\n" << method_name << endl;
+    cout << "+-----+------------+----------------+\n";
+    cout << "|  n  |  Значение  |  Погрешность   |\n";
+    cout << "+-----+------------+----------------+\n";
+
+    for (int n : ns) {
+        double val;
+        if (method_name == "Метод левых прямоугольников") {
+            val = left_rectangles_method(a, b, n);
+        }
+        else if (method_name == "Метод правых прямоугольников") {
+            val = right_rectangles_method(a, b, n);
+        }
+        else if (method_name == "Метод средних прямоугольников") {
+            val = medium_rectangles_method(a, b, n);
+        }
+        else if (method_name == "Метод трапеций") {
+            val = method_trapezoid(a, b, n);
+        }
+        else if (method_name == "Метод Симпсона") {
+            val = method_simpsons(a, b, n);
+        }
+
+        cout << "| " << setw(3) << n << " | " << fixed << setprecision(4)
+            << setw(10) << val << " | " << setw(14) << fabs(val - exact_value) << " |\n";
+    }
+    cout << "+-----+------------+----------------+\n";
+}
+
+int main() {
+    setlocale(0, "ru");
+    double a = -0.4, b = 1.8;
+    double exact = P(b) - P(a);
+
+    cout << "Точное значение: " << fixed << setprecision(4) << exact << "\n";
+
+    print_results("Метод левых прямоугольников", a, b, exact);
+    print_results("Метод правых прямоугольников", a, b, exact);
+    print_results("Метод средних прямоугольников", a, b, exact);
+    print_results("Метод трапеций", a, b, exact);
+    print_results("Метод Симпсона", a, b, exact)
+
+    return 0;
+}
