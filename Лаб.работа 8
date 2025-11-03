@@ -1,0 +1,231 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace InfLub8
+{
+    internal class InfLub8
+    {
+        static void Main()
+        {
+            double[,] A = {
+            { 10, 1, -1 },
+            { 1, 10, -1 },
+            { -1, 1, 10 }
+        };
+
+            double[] B = { 11, 10, 10 };
+
+            Console.WriteLine("Решение матричным методом:");
+            double[] X_matrix = MatrixMethod(A, B);
+            PrintVector(X_matrix);
+
+            Console.WriteLine("\nРешение методом Гаусса:");
+            double[] X_gauss = Gauss(A, B);
+            PrintVector(X_gauss);
+
+            double eps1 = 0.01;
+            double eps2 = 0.00001;
+
+            Console.WriteLine($"\nРешение методом Якоби (eps = {eps1}):");
+            double[] X_jacobi1 = Jacobi(A, B, eps1);
+
+            Console.WriteLine($"\nРешение методом Якоби (eps = {eps2}):");
+            double[] X_jacobi2 = Jacobi(A, B, eps2);
+
+            Console.WriteLine($"\nРешение методом Зейделя (eps = {eps1}):");
+            double[] X_seidel1 = Seidel(A, B, eps1);
+
+            Console.WriteLine($"\nРешение методом Зейделя (eps = {eps2}):");
+            double[] X_seidel2 = Seidel(A, B, eps2);
+        }
+
+        // ----------------- Матричный метод -----------------
+        static double[] MatrixMethod(double[,] A, double[] B)
+        {
+            int n = B.Length;
+            double[,] invA = InverseMatrix(A);
+            double[] X = new double[n];
+            for (int i = 0; i < n; i++)
+                for (int j = 0; j < n; j++)
+                    X[i] += invA[i, j] * B[j];
+            return X;
+        }
+
+        static double[,] InverseMatrix(double[,] matrix)
+        {
+            int n = matrix.GetLength(0);
+            double[,] a = new double[n, n];
+            Array.Copy(matrix, a, matrix.Length);
+            double[,] inv = new double[n, n];
+            for (int i = 0; i < n; i++) inv[i, i] = 1;
+
+            for (int i = 0; i < n; i++)
+            {
+                double diag = a[i, i];
+                for (int j = 0; j < n; j++)
+                {
+                    a[i, j] /= diag;
+                    inv[i, j] /= diag;
+                }
+                for (int k = 0; k < n; k++)
+                {
+                    if (k != i)
+                    {
+                        double factor = a[k, i];
+                        for (int j = 0; j < n; j++)
+                        {
+                            a[k, j] -= factor * a[i, j];
+                            inv[k, j] -= factor * inv[i, j];
+                        }
+                    }
+                }
+            }
+            return inv;
+        }
+
+        // ----------------- Метод Гаусса -----------------
+        static double[] Gauss(double[,] A, double[] B)
+        {
+            int n = B.Length;
+            double[,] a = new double[n, n];
+            double[] b = new double[n];
+            Array.Copy(A, a, A.Length);
+            Array.Copy(B, b, B.Length);
+
+            for (int i = 0; i < n; i++)
+            {
+                double diag = a[i, i];
+                for (int j = i; j < n; j++) a[i, j] /= diag;
+                b[i] /= diag;
+
+                for (int k = i + 1; k < n; k++)
+                {
+                    double factor = a[k, i];
+                    for (int j = i; j < n; j++) a[k, j] -= factor * a[i, j];
+                    b[k] -= factor * b[i];
+                }
+            }
+
+            double[] X = new double[n];
+            for (int i = n - 1; i >= 0; i--)
+            {
+                X[i] = b[i];
+                for (int j = i + 1; j < n; j++) X[i] -= a[i, j] * X[j];
+            }
+            return X;
+        }
+
+        // ----------------- Метод Якоби -----------------
+        static double[] Jacobi(double[,] A, double[] B, double eps)
+        {
+            int n = B.Length;
+            double[] X = new double[n];
+            double[] X_new = new double[n];
+            int iteration = 0;
+
+            StringBuilder sb = new StringBuilder();
+            string line = "*----------------------------------------------------------------*\n";
+
+            sb.Append(line);
+            sb.AppendFormat("| {0,-8} | {1,-15} | {2,-15} | {3,-15} |\n",
+                            "Итерация", "x1", "x2", "x3");
+            sb.Append(line);
+
+            do
+            {
+                iteration++;
+                for (int i = 0; i < n; i++)
+                {
+                    double sum = 0;
+                    for (int j = 0; j < n; j++)
+                    {
+                        if (j != i) sum += A[i, j] * X[j];
+                    }
+                    X_new[i] = (B[i] - sum) / A[i, i];
+                }
+
+                double maxDiff = 0;
+                for (int i = 0; i < n; i++)
+                {
+                    double diff = Math.Abs(X_new[i] - X[i]);
+                    if (diff > maxDiff) maxDiff = diff;
+                }
+
+                // Обновляем X перед проверкой и выводом
+                for (int i = 0; i < n; i++)
+                {
+                    X[i] = X_new[i];
+                }
+
+                // Выводим текущую итерацию
+                sb.AppendFormat("| {0,-8} | {1,-15:F8} | {2,-15:F8} | {3,-15:F8} |\n",
+                                iteration, X[0], X[1], X[2]);
+
+                if (maxDiff < eps) break;
+
+            } while (true);
+
+            sb.Append(line);
+            Console.Write(sb.ToString());
+
+            return X;
+        }
+
+        // ----------------- Метод Зейделя -----------------
+        static double[] Seidel(double[,] A, double[] B, double eps)
+        {
+            int n = B.Length;
+            double[] X = new double[n];
+            int iteration = 0;
+
+            StringBuilder sb = new StringBuilder();
+            string line = "*----------------------------------------------------------------*\n";
+
+            sb.Append(line);
+            sb.AppendFormat("| {0,-8} | {1,-15} | {2,-15} | {3,-15} |\n",
+                            "Итерация", "x1", "x2", "x3");
+            sb.Append(line);
+
+            do
+            {
+                iteration++;
+                double maxDiff = 0;
+                for (int i = 0; i < n; i++)
+                {
+                    double sum = 0;
+                    for (int j = 0; j < n; j++)
+                    {
+                        if (j != i) sum += A[i, j] * X[j];
+                    }
+                    double X_old = X[i];
+                    X[i] = (B[i] - sum) / A[i, i];
+                    double diff = Math.Abs(X[i] - X_old);
+                    if (diff > maxDiff) maxDiff = diff;
+                }
+
+                // Выводим текущую итерацию
+                sb.AppendFormat("| {0,-8} | {1,-15:F8} | {2,-15:F8} | {3,-15:F8} |\n",
+                                iteration, X[0], X[1], X[2]);
+
+                if (maxDiff < eps) break;
+
+            } while (true);
+
+            sb.Append(line);
+            Console.Write(sb.ToString());
+
+            return X;
+        }
+
+        // ----------------- Вспомогательный метод (старое оформление) -----------------
+        static void PrintVector(double[] X)
+        {
+            // Старое оформление для матричного метода и Гаусса
+            for (int i = 0; i < X.Length; i++)
+                Console.WriteLine($"x{i + 1} = {X[i]:F5}");
+        }
+    }
+}
