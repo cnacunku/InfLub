@@ -1,8 +1,12 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
+using System.Threading.Tasks;
 
-class TransportTask
+internal class Inf9L
 {
     static int[] suppliesOrig = { 53, 13, 94, 54, 47 };
     static int[] demandsOrig = { 81, 47, 53, 70, 10 };
@@ -94,7 +98,6 @@ class TransportTask
                 if (theta == int.MaxValue) theta = 0;
                 Console.WriteLine($"Максимальный объем для перераспределения по циклу: {theta}");
 
-                // Перераспределяем по циклу
                 for (int k = 0; k < cycle.Count; k++)
                 {
                     var (r, c) = cycle[k];
@@ -219,7 +222,6 @@ class TransportTask
             int minCost = int.MaxValue;
             int bestI = -1, bestJ = -1;
 
-            // Ищем клетку с минимальной стоимостью
             for (int i = 0; i < n; i++)
                 for (int j = 0; j < m; j++)
                     if (!used[i, j] && supplies[i] > 0 && demands[j] > 0 && costs[i, j] < minCost)
