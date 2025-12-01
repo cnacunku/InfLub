@@ -1,0 +1,101 @@
+using System;
+
+namespace DiffEqSolver
+{
+    class Program
+    {
+        // Функции из условия
+        static double phi(double x) => Math.Exp(-x * x);
+        static double psi(double x) => 1.0 / (2 * Math.Sqrt(2 * Math.PI));
+        static double g(double x) => 2 * (x - 2);
+        static double F(double x) => phi(x) * psi(x);
+        static double f(double x, double y) => F(x) - g(x) * y;
+
+        // Трапециевидная модификация Эйлера (один шаг)
+        static double TrapezoidalEulerStep(double x, double y, double h)
+        {
+            double k1 = f(x, y);
+            double y_half = y + (h / 2) * k1;
+            double x_half = x + h / 2;
+            double k2 = f(x_half, y_half);
+            return y + h * k2;
+        }
+
+        // Метод с автоматическим выбором шага
+        static int SolveAuto(double x0, double y0, double b, double h0, double eps)
+        {
+            Console.WriteLine("=== Автоматический выбор шага (eps = 0.001) ===");
+            Console.WriteLine("  x        y         h       шаг");
+            Console.WriteLine("-----------------------------------");
+
+            double x = x0;
+            double y = y0;
+            double h = h0;
+            int stepNum = 0;
+
+            while (x < b)
+            {
+                if (x + h > b) h = b - x;
+
+                double y1 = TrapezoidalEulerStep(x, y, h);
+                double y2 = TrapezoidalEulerStep(x + h, y1, h);
+
+                double y2h = TrapezoidalEulerStep(x, y, 2 * h);
+
+                double R = Math.Abs(y2 - y2h) / 3.0;
+
+                if (R > eps && h > 1e-6)
+                {
+                    h /= 2.0;
+                    continue;
+                }
+
+                stepNum++;
+                Console.WriteLine($"{x,6:F3}  {y,8:F5}  {h,6:F5}  {stepNum}");
+                x += h;
+                y = y2;
+
+                if (R < eps / 4.0)
+                {
+                    h *= 2.0;
+                }
+            }
+            Console.WriteLine($"{b,6:F3}  {y,8:F5}  {h,6:F5}  {stepNum}");
+
+            return stepNum; // Возвращаем общее количество шагов
+        }
+
+        // Метод с постоянным шагом
+        static void SolveFixed(double x0, double y0, double b, int totalSteps)
+        {
+            Console.WriteLine($"\n=== Постоянный шаг (N = {totalSteps}) ===");
+            Console.WriteLine("  x        y        шаг");
+            Console.WriteLine("------------------------");
+
+            double x = x0;
+            double y = y0;
+            double h = (b - x0) / totalSteps;
+
+            Console.WriteLine($"{x,6:F3}  {y,8:F5}     0");
+
+            for (int i = 1; i <= totalSteps; i++)
+            {
+                y = TrapezoidalEulerStep(x, y, h);
+                x += h;
+                Console.WriteLine($"{x,6:F3}  {y,8:F5}     {i}");
+            }
+        }
+
+        static void Main()
+        {
+            double x0 = 1.0, y0 = 10.0, b = 6.0;
+            double h0 = 0.5, eps = 1e-3;
+
+            // Часть (а) — автоматический шаг
+            int totalSteps = SolveAuto(x0, y0, b, h0, eps);
+
+            // Часть (б) — постоянный шаг с тем же количеством шагов
+            SolveFixed(x0, y0, b, totalSteps);
+        }
+    }
+}
