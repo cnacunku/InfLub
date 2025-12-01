@@ -302,3 +302,421 @@ namespace Inf9L
         }
     }
 }
+
+
+........
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+class TransportTask
+{
+    static int[] suppliesOrig = { 53, 13, 94, 54, 47 };
+    static int[] demandsOrig = { 81, 47, 53, 70, 10 };
+    static int[,] costsOrig = {
+        {5, 7, 8, 1, 7},
+        {3, 1, 6, 4, 2},
+        {2, 3, 8, 3, 6},
+        {3, 8, 4, 4, 5},
+        {4, 6, 7, 6, 1}
+    };
+
+    static void Main()
+    {
+        Console.WriteLine("=== Транспортная задача ===\n");
+
+        int n = suppliesOrig.Length;
+        int m = demandsOrig.Length;
+        int[] supplies = (int[])suppliesOrig.Clone();
+        int[] demands = (int[])demandsOrig.Clone();
+        int[,] costs = (int[,])costsOrig.Clone();
+
+        PrintProblem(supplies, demands, costs);
+
+        CheckBalanceAndAddDummy(ref supplies, ref demands, ref costs, out n, out m);
+
+        int[,] planNW = new int[n, m];
+        NorthwestCornerMethod((int[])supplies.Clone(), (int[])demands.Clone(), costs, n, m, planNW);
+        Console.WriteLine("План (Северо-Западный угол):");
+        PrintPlan(planNW, n, m);
+        int costNW = CalculateCost(planNW, costs, n, m);
+        Console.WriteLine($"Стоимость плана (NW): {costNW}\n");
+
+        int[,] planMin = new int[n, m];
+        MinElementMethod((int[])supplies.Clone(), (int[])demands.Clone(), costs, n, m, planMin);
+        Console.WriteLine("План (Минимальный элемент):");
+        PrintPlan(planMin, n, m);
+        int costMin = CalculateCost(planMin, costs, n, m);
+        Console.WriteLine($"Стоимость плана (MinElement): {costMin}\n");
+
+        int[,] currentPlan;
+        Console.WriteLine("Выбираем план с меньшей стоимостью:");
+        if (costNW <= costMin)
+        {
+            Console.WriteLine($"Выбран план Северо-Западного угла (стоимость {costNW}).\n");
+            currentPlan = (int[,])planNW.Clone();
+        }
+        else
+        {
+            Console.WriteLine($"Выбран план метода Минимального элемента (стоимость {costMin}).\n");
+            currentPlan = (int[,])planMin.Clone();
+        }
+
+        int iteration = 0;
+        while (true)
+        {
+            iteration++;
+            EnsureBasis(currentPlan, n, m);
+
+            bool ok = ComputePotentials(currentPlan, costs, n, m, out int[] u, out int[] v);
+            if (!ok)
+            {
+                Console.WriteLine("Ошибка вычисления потенциалов.");
+                break;
+            }
+
+            (int bestI, int bestJ, int bestDelta) = FindMostNegativeReducedCost(currentPlan, costs, u, v, n, m);
+
+            PrintPotentialsAndReducedCosts(currentPlan, costs, u, v, n, m);
+
+            if (bestDelta >= 0)
+            {
+                Console.WriteLine("Все редуцированные стоимости >= 0: план оптимален.");
+                break;
+            }
+            else
+            {
+                Console.WriteLine($"Отрицательная оценка: ({bestI},{bestJ}) = {bestDelta}");
+                List<(int r, int c)> cycle = FindCycle(currentPlan, bestI, bestJ, n, m);
+                if (cycle == null || cycle.Count == 0)
+                {
+                    Console.WriteLine("Не удалось построить цикл.");
+                    break;
+                }
+
+                int theta = int.MaxValue;
+                for (int k = 1; k < cycle.Count; k += 2)
+                {
+                    var (r, c) = cycle[k];
+                    if (currentPlan[r, c] < theta) theta = currentPlan[r, c];
+                }
+                if (theta == int.MaxValue) theta = 0;
+                Console.WriteLine($"Theta = {theta}");
+
+                for (int k = 0; k < cycle.Count; k++)
+                {
+                    var (r, c) = cycle[k];
+                    if (k % 2 == 0)
+                        currentPlan[r, c] += theta;
+                    else
+                        currentPlan[r, c] -= theta;
+                }
+
+                NormalizePlanBasis(currentPlan, n, m);
+
+                Console.WriteLine("План после корректировки:");
+                PrintPlan(currentPlan, n, m);
+                int newCost = CalculateCost(currentPlan, costs, n, m);
+                Console.WriteLine($"Новая стоимость: {newCost}");
+            }
+        }
+
+        Console.WriteLine("\n=== РЕЗУЛЬТАТ ===");
+        PrintPlan(currentPlan, n, m);
+        int finalCost = CalculateCost(currentPlan, costs, n, m);
+        Console.WriteLine($"Оптимальная стоимость: {finalCost}");
+    }
+
+    static void PrintProblem(int[] supplies, int[] demands, int[,] costs)
+    {
+        Console.WriteLine("Запасы: " + string.Join(", ", supplies));
+        Console.WriteLine("Потребности: " + string.Join(", ", demands));
+        Console.WriteLine("\nМатрица стоимостей:");
+        Console.Write("        ");
+        for (int j = 0; j < demands.Length; j++) Console.Write($"  {j + 1,2}");
+        Console.WriteLine();
+        for (int i = 0; i < supplies.Length; i++)
+        {
+            Console.Write($" {i + 1,2}     ");
+            for (int j = 0; j < demands.Length; j++)
+                Console.Write($"  {costs[i, j],2}");
+            Console.WriteLine();
+        }
+        Console.WriteLine();
+    }
+
+    static void CheckBalanceAndAddDummy(ref int[] supplies, ref int[] demands, ref int[,] costs, out int n, out int m)
+    {
+        int sumS = supplies.Sum();
+        int sumD = demands.Sum();
+        n = supplies.Length; m = demands.Length;
+        Console.WriteLine($"Сумма запасов = {sumS}, сумма потребностей = {sumD}");
+        if (sumS == sumD)
+        {
+            Console.WriteLine("Баланс выполнен.\n");
+            return;
+        }
+        if (sumS < sumD)
+        {
+            Console.WriteLine($"Добавляем фиктивного поставщика с запасом {sumD - sumS}.");
+            int[] newSup = new int[n + 1];
+            Array.Copy(supplies, newSup, n);
+            newSup[n] = sumD - sumS;
+            supplies = newSup;
+            int[,] newCosts = new int[n + 1, m];
+            for (int i = 0; i < n; i++)
+                for (int j = 0; j < m; j++)
+                    newCosts[i, j] = costs[i, j];
+            for (int j = 0; j < m; j++) newCosts[n, j] = 0;
+            costs = newCosts;
+            n++;
+        }
+        else
+        {
+            Console.WriteLine($"Добавляем фиктивного потребителя с потребностью {sumS - sumD}.");
+            int[] newDem = new int[m + 1];
+            Array.Copy(demands, newDem, m);
+            newDem[m] = sumS - sumD;
+            demands = newDem;
+            int[,] newCosts = new int[n, m + 1];
+            for (int i = 0; i < n; i++)
+                for (int j = 0; j < m; j++)
+                    newCosts[i, j] = costs[i, j];
+            for (int i = 0; i < n; i++) newCosts[i, m] = 0;
+            costs = newCosts;
+            m++;
+        }
+        Console.WriteLine("Баланс восстановлен.\n");
+    }
+
+    static void NorthwestCornerMethod(int[] supplies, int[] demands, int[,] costs, int n, int m, int[,] plan)
+    {
+        int i = 0, j = 0;
+        while (i < n && j < m)
+        {
+            int ship = Math.Min(supplies[i], demands[j]);
+            plan[i, j] = ship;
+            supplies[i] -= ship;
+            demands[j] -= ship;
+            if (supplies[i] == 0) i++;
+            else if (demands[j] == 0) j++;
+        }
+    }
+
+    static void MinElementMethod(int[] supplies, int[] demands, int[,] costs, int n, int m, int[,] plan)
+    {
+        bool[,] used = new bool[n, m];
+        while (true)
+        {
+            int minCost = int.MaxValue;
+            int bi = -1, bj = -1;
+            for (int i = 0; i < n; i++)
+                for (int j = 0; j < m; j++)
+                    if (!used[i, j] && supplies[i] > 0 && demands[j] > 0 && costs[i, j] < minCost)
+                    {
+                        minCost = costs[i, j];
+                        bi = i; bj = j;
+                    }
+            if (bi == -1) break;
+            int ship = Math.Min(supplies[bi], demands[bj]);
+            plan[bi, bj] = ship;
+            supplies[bi] -= ship;
+            demands[bj] -= ship;
+            if (supplies[bi] == 0)
+            {
+                for (int j = 0; j < m; j++) used[bi, j] = true;
+            }
+            if (demands[bj] == 0)
+            {
+                for (int i = 0; i < n; i++) used[i, bj] = true;
+            }
+        }
+    }
+
+    static void PrintPlan(int[,] plan, int n, int m)
+    {
+        Console.Write("       ");
+        for (int j = 0; j < m; j++) Console.Write($" {j + 1,3}");
+        Console.WriteLine();
+        for (int i = 0; i < n; i++)
+        {
+            Console.Write($" {i + 1,2}:   ");
+            for (int j = 0; j < m; j++)
+                Console.Write($" {plan[i, j],3}");
+            Console.WriteLine();
+        }
+        Console.WriteLine();
+    }
+
+    static int CalculateCost(int[,] plan, int[,] costs, int n, int m)
+    {
+        int total = 0;
+        for (int i = 0; i < n; i++)
+            for (int j = 0; j < m; j++)
+                total += plan[i, j] * costs[i, j];
+        return total;
+    }
+
+    static void EnsureBasis(int[,] plan, int n, int m)
+    {
+        int need = n + m - 1;
+        List<(int r, int c)> basics = GetBasicCells(plan, n, m);
+        if (basics.Count == need) return;
+        if (basics.Count > need) return;
+        for (int i = 0; i < n && basics.Count < need; i++)
+            for (int j = 0; j < m && basics.Count < need; j++)
+            {
+                if (plan[i, j] == 0)
+                {
+                    plan[i, j] = 0;
+                    basics.Add((i, j));
+                }
+            }
+    }
+
+    static List<(int r, int c)> GetBasicCells(int[,] plan, int n, int m)
+    {
+        var res = new List<(int r, int c)>();
+        for (int i = 0; i < n; i++)
+            for (int j = 0; j < m; j++)
+                if (plan[i, j] != 0) res.Add((i, j));
+        return res;
+    }
+
+    static bool ComputePotentials(int[,] plan, int[,] costs, int n, int m, out int[] u, out int[] v)
+    {
+        u = Enumerable.Repeat(int.MinValue, n).ToArray();
+        v = Enumerable.Repeat(int.MinValue, m).ToArray();
+        u[0] = 0;
+        bool changed = true;
+        int steps = 0;
+        while (changed && steps < (n + m) * 5)
+        {
+            changed = false;
+            steps++;
+            for (int i = 0; i < n; i++)
+                for (int j = 0; j < m; j++)
+                    if (plan[i, j] != 0)
+                    {
+                        if (u[i] != int.MinValue && v[j] == int.MinValue)
+                        {
+                            v[j] = costs[i, j] - u[i];
+                            changed = true;
+                        }
+                        else if (v[j] != int.MinValue && u[i] == int.MinValue)
+                        {
+                            u[i] = costs[i, j] - v[j];
+                            changed = true;
+                        }
+                    }
+        }
+        for (int i = 0; i < n; i++) if (u[i] == int.MinValue) u[i] = 0;
+        for (int j = 0; j < m; j++) if (v[j] == int.MinValue) v[j] = 0;
+        return true;
+    }
+
+    static (int bestI, int bestJ, int bestDelta) FindMostNegativeReducedCost(int[,] plan, int[,] costs, int[] u, int[] v, int n, int m)
+    {
+        int bestDelta = int.MaxValue;
+        int bi = -1, bj = -1;
+        for (int i = 0; i < n; i++)
+            for (int j = 0; j < m; j++)
+                if (plan[i, j] == 0)
+                {
+                    int delta = costs[i, j] - (u[i] + v[j]);
+                    if (delta < bestDelta)
+                    {
+                        bestDelta = delta;
+                        bi = i; bj = j;
+                    }
+                }
+        if (bestDelta == int.MaxValue) bestDelta = 0;
+        return (bi, bj, bestDelta);
+    }
+
+    static void PrintPotentialsAndReducedCosts(int[,] plan, int[,] costs, int[] u, int[] v, int n, int m)
+    {
+        Console.WriteLine("Потенциалы u: " + string.Join(", ", u));
+        Console.WriteLine("Потенциалы v: " + string.Join(", ", v));
+        Console.WriteLine("Редуцированные стоимости:");
+        for (int i = 0; i < n; i++)
+        {
+            for (int j = 0; j < m; j++)
+            {
+                int delta = costs[i, j] - (u[i] + v[j]);
+                if (plan[i, j] == 0) Console.Write($"{delta,4}");
+                else Console.Write("  B ");
+            }
+            Console.WriteLine();
+        }
+    }
+
+    static List<(int r, int c)> FindCycle(int[,] plan, int startI, int startJ, int n, int m)
+    {
+        var basics = new HashSet<(int, int)>();
+        for (int i = 0; i < n; i++)
+            for (int j = 0; j < m; j++)
+                if (plan[i, j] != 0 || (i == startI && j == startJ))
+                    basics.Add((i, j));
+
+        var path = new List<(int r, int c)>();
+        path.Add((startI, startJ));
+
+        bool found = DfsCycle(path, basics, n, m);
+        if (!found) return null;
+        if (path.Count > 1 && path[0] == path[path.Count - 1])
+            path.RemoveAt(path.Count - 1);
+        return path;
+    }
+
+    static bool DfsCycle(List<(int r, int c)> path, HashSet<(int, int)> basics, int n, int m)
+    {
+        var start = path[0];
+        var cur = path[path.Count - 1];
+
+        if (path.Count > (basics.Count + 2)) return false;
+
+        foreach (var next in basics)
+        {
+            if (next == cur) continue;
+            if (!(next.Item1 == cur.Item1 || next.Item2 == cur.Item2)) continue;
+            bool isStart = next == start;
+            if (path.Contains(next) && !(isStart && path.Count >= 4)) continue;
+
+            path.Add(next);
+            if (isStart)
+            {
+                return true;
+            }
+            else
+            {
+                if (DfsCycle(path, basics, n, m)) return true;
+            }
+            path.RemoveAt(path.Count - 1);
+        }
+        return false;
+    }
+
+    static void NormalizePlanBasis(int[,] plan, int n, int m)
+    {
+        for (int i = 0; i < n; i++)
+            for (int j = 0; j < m; j++)
+                if (plan[i, j] < 0) plan[i, j] = 0;
+
+        var basics = new List<(int r, int c)>();
+        var zeros = new List<(int r, int c)>();
+        for (int i = 0; i < n; i++)
+            for (int j = 0; j < m; j++)
+                if (plan[i, j] != 0) basics.Add((i, j));
+                else zeros.Add((i, j));
+        int need = n + m - 1;
+        int have = basics.Count;
+        int toTake = Math.Max(0, need - have);
+        for (int k = 0; k < toTake && k < zeros.Count; k++)
+        {
+            var (r, c) = zeros[k];
+            plan[r, c] = 0;
+        }
+    }
+}
