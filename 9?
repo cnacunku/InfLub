@@ -92,7 +92,7 @@ class TransportTask
                     if (currentPlan[r, c] < theta) theta = currentPlan[r, c];
                 }
                 if (theta == int.MaxValue) theta = 0;
-                Console.WriteLine($"Максимальное количество, которое можно перераспределить (θ) = {theta}");
+                Console.WriteLine($"Максимальный объем для перераспределения по циклу: {theta}");
 
                 // Перераспределяем по циклу
                 for (int k = 0; k < cycle.Count; k++)
